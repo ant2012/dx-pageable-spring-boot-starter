@@ -89,18 +89,17 @@ public class DxFilter<E> implements Specification<E> {
             String comparisonOperator = jsonArray.getString(1);
             Object value = getValue(propertyType, jsonArray);
 
-
             return switch (comparisonOperator) {
                 case "=" -> value != null ? cb.equal(property, value) : cb.isNull(property);
                 case "<>" -> value != null ? cb.notEqual(property, value) : cb.isNotNull(property);
-                case ">" -> cb.greaterThan(root.get(propertyPath), (Comparable) value);
-                case ">=" -> cb.greaterThanOrEqualTo(root.get(propertyPath), (Comparable) value);
-                case "<" -> cb.lessThan(root.get(propertyPath), (Comparable) value);
-                case "<=" -> cb.lessThanOrEqualTo(root.get(propertyPath), (Comparable) value);
-                case "startswith" -> cb.like(root.get(propertyPath), value + "%");
-                case "endswith" -> cb.like(root.get(propertyPath), "%" + value);
-                case "contains" -> cb.like(root.get(propertyPath), "%" + value + "%");
-                case "notcontains" -> cb.notLike(root.get(propertyPath), "%" + value + "%");
+                case ">" -> cb.greaterThan((Expression<? extends Comparable>) property, (Comparable) value);
+                case ">=" -> cb.greaterThanOrEqualTo((Expression<? extends Comparable>) property, (Comparable) value);
+                case "<" -> cb.lessThan((Expression<? extends Comparable>) property, (Comparable) value);
+                case "<=" -> cb.lessThanOrEqualTo((Expression<? extends Comparable>) property, (Comparable) value);
+                case "startswith" -> cb.like((Expression<String>) property, value + "%");
+                case "endswith" -> cb.like((Expression<String>) property, "%" + value);
+                case "contains" -> cb.like((Expression<String>) property, "%" + value + "%");
+                case "notcontains" -> cb.notLike((Expression<String>) property, "%" + value + "%");
                 case "anyof" -> property.in((Collection<?>) value);
                 case "noneof" -> property.in((Collection<?>) value).not();
                 default -> throw new NotImplementedException(String.format("Comparison operator [%1$s] not supported", comparisonOperator));
