@@ -42,4 +42,12 @@
 			<version>2.0.1</version>
 		</dependency>
     </dependencies>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub OWNER Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/ant2012/dx-pageable-spring-boot-starter</url>
+		</repository>
+	</distributionManagement>
 </project>
