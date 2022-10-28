@@ -129,17 +129,13 @@ public class DxFilter<E> implements Specification<E> {
 
         private Object getValue(Class<? extends T> propertyType, JsonArray jsonArray) {
             String comparisonOperator = jsonArray.getString(1);
-            Object val = switch (comparisonOperator) {
+            return switch (comparisonOperator) {
                 case "=", "<>", ">", ">=", "<", "<=", "startswith", "endswith", "contains", "notcontains" ->
                         getSingleValue(propertyType, jsonArray, 2);
                 case "anyof", "noneof" -> getValueCollection(propertyType, jsonArray);
                 default ->
                         throw new NotImplementedException(format("Comparison operator [%1$s] not supported", comparisonOperator));
             };
-
-            return val != null && isSensitivityPreventingNeeded(propertyType)
-                    ? ((String)val).toLowerCase()
-                    : val;
         }
 
         private boolean isSensitivityPreventingNeeded(Class<? extends T> propertyType) {
@@ -167,8 +163,11 @@ public class DxFilter<E> implements Specification<E> {
                         throw new IllegalArgumentException(format("Oik can not be of type [%1$s]", jsonValue.getValueType().name()));
             };
         }
-        private Object getValueFromJsonString(Class<?> propertyType, String s) {
-            return conversionService.convert(s, propertyType);
+        private Object getValueFromJsonString(Class<? extends T> propertyType, String s) {
+            Object val = conversionService.convert(s, propertyType);
+            return val != null && isSensitivityPreventingNeeded(propertyType)
+                    ? ((String)val).toLowerCase()
+                    : val;
         }
     }
 }
