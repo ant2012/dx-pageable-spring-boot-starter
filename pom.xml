@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>ru.ant.spring.dx</groupId>
 	<artifactId>dx-pageable-spring-boot-starter</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<name>DxPageable</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -3,6 +3,8 @@ package ru.ant.spring.dx;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonValue;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,6 +20,8 @@ import static java.lang.String.format;
 
 @SuppressWarnings("unused")
 public class DxFilter<E> implements Specification<E> {
+    @Getter @Setter
+    private static boolean caseSensitive = true;
     private enum GroupOperator {and, or}
     private final Specification<E> spec;
     private final ConversionService conversionService;
@@ -89,22 +93,31 @@ public class DxFilter<E> implements Specification<E> {
             String comparisonOperator = jsonArray.getString(1);
             Object value = getValue(propertyType, jsonArray);
 
+            Expression<T> expression = applyCaseSensitive(cb, property);
             return switch (comparisonOperator) {
-                case "=" -> value != null ? cb.equal(property, value) : cb.isNull(property);
-                case "<>" -> value != null ? cb.notEqual(property, value) : cb.isNotNull(property);
-                case ">" -> cb.greaterThan((Expression<? extends Comparable>) property, (Comparable) value);
-                case ">=" -> cb.greaterThanOrEqualTo((Expression<? extends Comparable>) property, (Comparable) value);
-                case "<" -> cb.lessThan((Expression<? extends Comparable>) property, (Comparable) value);
-                case "<=" -> cb.lessThanOrEqualTo((Expression<? extends Comparable>) property, (Comparable) value);
-                case "startswith" -> cb.like((Expression<String>) property, value + "%");
-                case "endswith" -> cb.like((Expression<String>) property, "%" + value);
-                case "contains" -> cb.like((Expression<String>) property, "%" + value + "%");
-                case "notcontains" -> cb.notLike((Expression<String>) property, "%" + value + "%");
-                case "anyof" -> property.in((Collection<?>) value);
-                case "noneof" -> property.in((Collection<?>) value).not();
+                case "=" -> value != null ? cb.equal(expression, value) : cb.isNull(expression);
+                case "<>" -> value != null ? cb.notEqual(expression, value) : cb.isNotNull(expression);
+                case ">" -> cb.greaterThan((Expression<? extends Comparable>) expression, (Comparable) value);
+                case ">=" -> cb.greaterThanOrEqualTo((Expression<? extends Comparable>) expression, (Comparable) value);
+                case "<" -> cb.lessThan((Expression<? extends Comparable>) expression, (Comparable) value);
+                case "<=" -> cb.lessThanOrEqualTo((Expression<? extends Comparable>) expression, (Comparable) value);
+                case "startswith" -> cb.like((Expression<String>) expression, value + "%");
+                case "endswith" -> cb.like((Expression<String>) expression, "%" + value);
+                case "contains" -> cb.like((Expression<String>) expression, "%" + value + "%");
+                case "notcontains" -> cb.notLike((Expression<String>) expression, "%" + value + "%");
+                case "anyof" -> expression.in((Collection<?>) value);
+                case "noneof" -> expression.in((Collection<?>) value).not();
                 default -> throw new NotImplementedException(String.format("Comparison operator [%1$s] not supported", comparisonOperator));
             };
         }
+
+        private Expression<T> applyCaseSensitive(CriteriaBuilder cb, Path<T> property) {
+            //noinspection unchecked
+            return isSensitivityPreventingNeeded(property.getJavaType())
+                    ? (Expression<T>) cb.lower((Expression<String>) property)
+                    : property;
+        }
+
         private Path<T> createExpression(Root<E> root, String propertyName) {
             String[] pathParts = propertyName.split("\\.");
             Path<T> exp = null;
@@ -116,12 +129,21 @@ public class DxFilter<E> implements Specification<E> {
 
         private Object getValue(Class<? extends T> propertyType, JsonArray jsonArray) {
             String comparisonOperator = jsonArray.getString(1);
-            return switch (comparisonOperator) {
-                case "=", "<>", ">", ">=", "<", "<=", "startswith", "endswith", "contains", "notcontains" -> getSingleValue(propertyType, jsonArray, 2);
+            Object val = switch (comparisonOperator) {
+                case "=", "<>", ">", ">=", "<", "<=", "startswith", "endswith", "contains", "notcontains" ->
+                        getSingleValue(propertyType, jsonArray, 2);
                 case "anyof", "noneof" -> getValueCollection(propertyType, jsonArray);
-                default -> throw new NotImplementedException(String.format("Comparison operator [%1$s] not supported", comparisonOperator));
+                default ->
+                        throw new NotImplementedException(format("Comparison operator [%1$s] not supported", comparisonOperator));
             };
 
+            return val != null && isSensitivityPreventingNeeded(propertyType)
+                    ? ((String)val).toLowerCase()
+                    : val;
+        }
+
+        private boolean isSensitivityPreventingNeeded(Class<? extends T> propertyType) {
+            return !caseSensitive && propertyType.isAssignableFrom(String.class);
         }
 
         private Collection<?> getValueCollection(Class<? extends T> propertyType, JsonArray jsonArray) {
