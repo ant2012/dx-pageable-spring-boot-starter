@@ -1,8 +1,5 @@
 package ru.ant.spring.dx;
 
-import jakarta.json.Json;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonValue;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.NotImplementedException;
@@ -10,6 +7,9 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.NonNull;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonValue;
 import javax.persistence.criteria.*;
 import java.io.StringReader;
 import java.util.ArrayList;
