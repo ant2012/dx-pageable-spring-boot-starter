@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.3</version>
+		<version>3.5.7</version>
 		<relativePath/>
 	</parent>
 	<groupId>ru.ant.spring.dx</groupId>
 	<artifactId>dx-pageable-spring-boot-starter</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<name>DxPageable</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

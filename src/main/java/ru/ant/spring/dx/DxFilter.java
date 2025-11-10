@@ -15,6 +15,8 @@ import javax.json.JsonValue;
 import jakarta.persistence.criteria.*;
 
 import java.io.StringReader;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -171,6 +173,10 @@ public class DxFilter<E> implements Specification<E> {
             };
         }
         private Object getValueFromJsonString(Class<? extends T> propertyType, String s) {
+            if (LocalDate.class.isAssignableFrom(propertyType))
+                return LocalDate.parse(s.trim());
+            if (LocalDateTime.class.isAssignableFrom(propertyType))
+                return LocalDateTime.parse(s.trim());
             Object val = conversionService.convert(s, propertyType);
             return val != null && isSensitivityPreventingNeeded(propertyType)
                     ? ((String)val).toLowerCase()
